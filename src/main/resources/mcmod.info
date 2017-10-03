@@ -1,0 +1,16 @@
+[
+{
+  "modid": "physics",
+  "name": "Kedlub's Phyiscs Mod",
+  "description": "Mod that adds realistic physics to minecraft.",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["kedlub"],
+  "credits": "",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]

@@ -1,0 +1,7 @@
+key.physics.category=Reálistická fyzika
+key.spawnblock.desc=Spawnou fyzický blok
+key.removeblocks.desc=Odstranit všechny fyzické bloky
+key.pauseblocks.desc=Zmrazit bloky
+physics.removeblock.text=Všechny bloky byly odstraněny
+physics.newversion.text=Nová verze je dostupná
+physics.physicsfail.text=Physics engine selhal, všechny bloky byly vymazány

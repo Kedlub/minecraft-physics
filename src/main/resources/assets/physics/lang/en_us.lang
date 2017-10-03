@@ -1,0 +1,7 @@
+key.physics.category=Physics Mod
+key.spawnblock.desc=Spawn physics block
+key.removeblocks.desc=Remove all physics blocks
+key.pauseblocks.desc=Freeze blocks
+physics.removeblock.text=Removed all blocks
+physics.newversion.text=New version is available
+physics.physicsfail.text=Physics engine failed, all blocks have been deleted
