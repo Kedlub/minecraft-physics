@@ -4,6 +4,8 @@ import com.github.kedlub.physics.entity.EntityPhysicsBlock;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.common.event.FMLInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.registry.EntityRegistry;
 
 /**
@@ -11,20 +13,19 @@ import net.minecraftforge.fml.common.registry.EntityRegistry;
  */
 public class CommonProxy {
 
-    public void preInit() {
-        EventManager manager = new EventManager();
-        manager.setCubeList();
-        MinecraftForge.EVENT_BUS.register(manager);
+    public void preInit(FMLPreInitializationEvent event) {
+
     }
 
-    public void load() {
-        createEntity(EntityPhysicsBlock.class,1000,"Physics Block");
+    public void load(FMLInitializationEvent event) {
+        //createEntity(EntityPhysicsBlock.class,1,"Physics Block", "physicsblock");
+
     }
 
-    public static void createEntity(Class entityClass, int ID, String entityName){
+    public static void createEntity(Class entityClass, int ID, String entityName, String name){
         //EntityRegistry.registerGlobalEntityID(EntityPhysicsBlock.class, "ball", ID);
 
-        EntityRegistry.registerModEntity(new ResourceLocation("physics"),entityClass, entityName, ID, PhysicsMod.instance, 128, 1, true);
+        EntityRegistry.registerModEntity(new ResourceLocation("physics",name),entityClass, entityName, ID, PhysicsMod.instance, 64, 10, true);
 
     }
 }

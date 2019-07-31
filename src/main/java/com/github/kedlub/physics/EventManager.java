@@ -1,6 +1,11 @@
 package com.github.kedlub.physics;
 
 import com.bulletphysics.collision.shapes.BoxShape;
+import com.bulletphysics.collision.shapes.CollisionShape;
+import com.bulletphysics.collision.shapes.voxel.VoxelInfo;
+import com.bulletphysics.collision.shapes.voxel.VoxelPhysicsWorld;
+import com.bulletphysics.collision.shapes.voxel.VoxelWorldShape;
+import com.bulletphysics.dynamics.DiscreteDynamicsWorld;
 import com.bulletphysics.dynamics.RigidBody;
 import com.bulletphysics.linearmath.DefaultMotionState;
 import com.bulletphysics.linearmath.Transform;
@@ -8,7 +13,8 @@ import com.github.kedlub.physics.entity.EntityPhysicsBlock;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 //import net.minecraft.client.entity.EntityPlayerSP;
-import net.minecraft.client.gui.GuiMainMenu;
+import net.minecraft.client.entity.EntityPlayerSP;
+
 import net.minecraft.client.renderer.*;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
@@ -16,6 +22,8 @@ import net.minecraft.client.renderer.vertex.VertexFormat;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.item.EntityFallingBlock;
+import net.minecraft.entity.passive.EntityPig;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.ResourceLocation;
@@ -29,14 +37,17 @@ import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.event.entity.EntityEvent;
 import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
 import net.minecraftforge.event.world.*;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
+import net.minecraftforge.fml.common.registry.EntityEntry;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.lwjgl.BufferUtils;
@@ -62,8 +73,10 @@ import static org.lwjgl.opengl.GL11.glVertex3f;
  */
 public class EventManager {
 
-    //RigidBody playerRigidBody;
-    //Transform playerXForm;
+    RigidBody playerRigidBody;
+    Transform playerXForm;
+
+
 
     @SubscribeEvent
     public void OnWorldLoad(WorldEvent.Load e) {
@@ -77,8 +90,8 @@ public class EventManager {
             block.setDead();
         }*/
 
-        //PhysicsMod.instance.dynamicsWorld.removeRigidBody(playerRigidBody);
-        /*playerRigidBody = null;
+        /*PhysicsMod.instance.dynamicsWorld.removeRigidBody(playerRigidBody);
+        playerRigidBody = null;
         playerXForm = null;*/
     }
 
@@ -91,7 +104,15 @@ public class EventManager {
     @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent event)
     {
-        //if(Minecraft.getMinecraft().world == null) return;
+
+
+        /*if(Minecraft.getMinecraft().world == null) return;
+
+        for (Object o : Minecraft.getMinecraft().world.getLoadedEntityList()) {
+            if (o instanceof EntityPhysicsBlock && !PhysicsMod.blocks.contains(o)) {
+                PhysicsMod.blocks.add((EntityPhysicsBlock) o);
+            }
+        }*/
         /*EntityPlayerSP ply = Minecraft.getMinecraft().player;
         if(playerRigidBody == null && ply != null) {
 
@@ -106,7 +127,7 @@ public class EventManager {
         }*/
 
 
-        if(PhysicsMod.ready == 0 && !PhysicsMod.paused) {
+        /*if(PhysicsMod.ready == 0 && !PhysicsMod.paused) {
             try {
                 for (Iterator<EntityPhysicsBlock> i = PhysicsMod.blocks.iterator(); i.hasNext(); ) {
                     EntityPhysicsBlock block = i.next();
@@ -114,10 +135,10 @@ public class EventManager {
                 }
 
                 //EntityPlayerSP ply = Minecraft.getMinecraft().player;
-        /*if(playerRigidBody != null && playerXForm != null) {
-            playerXForm.origin.set((float) ply.posX, (float) ply.posY, (float) ply.posZ);
-            playerRigidBody.setCenterOfMassTransform(playerXForm);
-        }*/
+                if(playerRigidBody != null && playerXForm != null) {
+                    playerXForm.origin.set((float) ply.posX - 0.5f, (float) ply.posY - 0.5f, (float) ply.posZ - 0.5f);
+                    playerRigidBody.setCenterOfMassTransform(playerXForm);
+                }
                 //if(PhysicsMod.ready == 1) {
                 PhysicsMod.instance.dynamicsWorld.stepSimulation(0.026666668F);
             }
@@ -127,36 +148,106 @@ public class EventManager {
                     block.setDead();
                 }
 
-                PhysicsMod.instance.infobox.displayInfo(I18n.format("physics.physicsfail.text"));
+                //PhysicsMod.instance.infobox.displayInfo("Physics engine failed, all blocks has been deleted");
+                System.out.println("Physics engine failed, all blocks has been deleted");
+            }
+        }
+        else if(PhysicsMod.ready > 0) {
+            PhysicsMod.ready -= 1;
+        }*/
+        //}
+        //PhysicsMod.instance.dynamicsWorld.stepSimulation(System.nanoTime());
+    }
+
+    @SubscribeEvent
+    public void onServerTick(TickEvent.WorldTickEvent event) {
+        if(PhysicsMod.ready == 0 && !PhysicsMod.paused) {
+            try {
+                /*for (Iterator<Entity> i = event.world.loadedEntityList.iterator(); i.hasNext(); ) {
+                    if(i instanceof EntityPhysicsBlock) {
+                        EntityPhysicsBlock block = (EntityPhysicsBlock) i.next();
+                        block.update();
+                    }
+                }*/
+                /*for (Object o : event.world.loadedEntityList) {
+                    if (o instanceof EntityPhysicsBlock) {
+                        EntityPhysicsBlock block = (EntityPhysicsBlock) o;
+                        block.update();
+                    }
+                }*/
+
+                //EntityPlayerSP ply = Minecraft.getMinecraft().player;
+                /*if(playerRigidBody != null && playerXForm != null) {
+                    playerXForm.origin.set((float) ply.posX - 0.5f, (float) ply.posY - 0.5f, (float) ply.posZ - 0.5f);
+                    playerRigidBody.setCenterOfMassTransform(playerXForm);
+                }*/
+                //if(PhysicsMod.ready == 1) {
+                if(PhysicsMod.instance.dynamicsWorld != null) {
+                    PhysicsMod.instance.dynamicsWorld.stepSimulation(0.026666668F);
+                }
+            }
+            catch (Exception e) {
+                for (int i = PhysicsMod.blocks.size() - 1; i != -1; i--) {
+                    EntityPhysicsBlock block = PhysicsMod.blocks.get(i);
+                    block.setDead();
+                }
+
+                //PhysicsMod.instance.infobox.displayInfo("Physics engine failed, all blocks has been deleted");
+                //e.pri
+                System.out.println("Physics engine failed, all blocks has been deleted");
+                e.printStackTrace();
             }
         }
         else if(PhysicsMod.ready > 0) {
             PhysicsMod.ready -= 1;
         }
-        //}
-        //PhysicsMod.instance.dynamicsWorld.stepSimulation(System.nanoTime());
     }
 
 
     @SubscribeEvent
     public void onExplosion(ExplosionEvent.Detonate e) {
         PhysicsMod.ready += 5;
-        List<BlockPos> pos = e.getExplosion().getAffectedBlockPositions();
+        List<BlockPos> pos = e.getAffectedBlocks();
         World worldObj = e.getWorld();
 
         for(Iterator< BlockPos> i = pos.iterator(); i.hasNext();){
             BlockPos block = i.next();
             IBlockState blockState = worldObj.getBlockState(block);
 
-            if(blockState.isFullBlock()) {
-                EntityPhysicsBlock pb = new EntityPhysicsBlock(worldObj);
+            if(blockState.isFullBlock() && !worldObj.isRemote) {
+                EntityPhysicsBlock pb = new EntityPhysicsBlock(worldObj, (float) block.getX(), (float) block.getY(), (float) block.getZ(), 0, new Random().nextInt(30), 0, blockState);
+                //EntityPig pb = new EntityPig(worldObj);
+                //EntityFallingBlock pb = new EntityFallingBlock(worldObj, block.getX(), block.getY(), block.getZ(), blockState);
+                //pb.setVelocity(0,new Random().nextInt(30), 0);
+                //pb.setPosition((float) block.getX(), (float) block.getY(), (float) block.getZ());
                 //pb.setPosition(player.posX,player.posY,player.posZ);
-                pb.init((float) block.getX(), (float) block.getY(), (float) block.getZ(), 0, new Random().nextInt(30), 0, blockState);
                 pb.forceSpawn = true;
+                worldObj.spawnEntity(pb);
             }
         }
 
+        System.out.println("Rigidbody count: " + PhysicsMod.blocks.size());
+
         //PhysicsMod.ready = 1;
+    }
+
+    @SubscribeEvent
+    public void onWorldTick(TickEvent.WorldTickEvent event)
+    {
+        /*if(event.side == Side.CLIENT) {
+            for (Object o : event.world.getLoadedEntityList()) {
+                if (o instanceof EntityPhysicsBlock && !PhysicsMod.blocks.contains(o)) {
+                    PhysicsMod.blocks.add((EntityPhysicsBlock) o);
+                }
+            }
+        }
+        else if(event.side == Side.SERVER) {*/
+            for (Object o : event.world.loadedEntityList) {
+                if (o instanceof EntityPhysicsBlock && !PhysicsMod.blocks.contains(o)) {
+                    PhysicsMod.blocks.add((EntityPhysicsBlock) o);
+                }
+            }
+        //}
     }
 
     @SubscribeEvent
@@ -178,14 +269,101 @@ public class EventManager {
     }
 
     @SubscribeEvent
+    public void worldLoad(WorldEvent.Load event) {
+
+        if(!event.getWorld().isRemote && event.getWorld().provider.getDimension() == 0) {
+
+            System.out.println("worldLoad called for overworld");
+
+            PhysicsMod.instance.dynamicsWorld = new DiscreteDynamicsWorld(PhysicsMod.instance.dispatcher, PhysicsMod.instance.broadphaseInterface, PhysicsMod.instance.constraintSolver, PhysicsMod.instance.collisionConfiguration);
+
+            PhysicsMod.instance.dynamicsWorld.setGravity(new Vector3f(0f, -10f, 0f));
+
+            System.out.println("dynamicsWorld created and set gravity");
+
+            VoxelPhysicsWorld world = new VoxelPhysicsWorld() {
+
+                @Override
+                public VoxelInfo getCollisionShapeAt(int i, int i1, int i2) {
+                    //System.out.println(i + " " + i1 + " " + i2);
+                    //final IBlockState state = Minecraft.getMinecraft().world.getBlockState(new BlockPos(i,i1,i2));
+                    final IBlockState state = FMLCommonHandler.instance().getMinecraftServerInstance().worlds[0].getBlockState(new BlockPos(i, i1, i2));
+
+                    VoxelInfo info = new VoxelInfo() {
+                        @Override
+                        public boolean isColliding() {
+                            return false;
+                        }
+
+                        @Override
+                        public Object getUserData() {
+                            return null;
+                        }
+
+                        @Override
+                        public CollisionShape getCollisionShape() {
+                            return new BoxShape(new Vector3f(0.5f, 0.5f, 0.5f));
+                        }
+
+                        @Override
+                        public Vector3f getCollisionOffset() {
+                            Vector3f vector3f = new Vector3f(0f, 0f, 0f);
+                            return vector3f;
+                        }
+
+                        @Override
+                        public boolean isBlocking() {
+                            return state.isFullBlock();
+                        }
+
+                        @Override
+                        public float getFriction() {
+                            return 0.8f;
+                        }
+
+                        @Override
+                        public float getRestitution() {
+                            return 0.01f;
+                        }
+                    };
+                    return info;
+                }
+            };
+
+            VoxelWorldShape worldShape = new VoxelWorldShape(world);
+            worldShape.setLocalScaling(new Vector3f(0.5f, 0.5f, 0.5f));
+
+            System.out.println("world shape created");
+
+            PhysicsMod.instance.worldBody = new RigidBody(0, new DefaultMotionState(), worldShape);
+            Transform xform1 = new Transform();
+            xform1.setIdentity();
+            xform1.origin.set(0, 0.5f, 0);
+            PhysicsMod.instance.worldBody.setCenterOfMassTransform(xform1);
+            PhysicsMod.instance.worldBody.activate();
+
+            PhysicsMod.instance.dynamicsWorld.addRigidBody(PhysicsMod.instance.worldBody);
+            System.out.println("worldBody created and added to dynamicsWorld");
+        }
+    }
+
+    @SubscribeEvent
+    public void worldUnLoad(WorldEvent.Unload event) {
+        if(!event.getWorld().isRemote && event.getWorld().provider.getDimension() == 0) {
+            System.out.println("destroying dynamicsWorld...");
+            PhysicsMod.instance.dynamicsWorld.destroy();
+        }
+    }
+
+    /*@SubscribeEvent
     public void drawHud(TickEvent.RenderTickEvent event) {
 
         PhysicsMod.instance.infobox.updateAchievementWindow();
-    }
+    }*/
 
     String str;
 
-    @SubscribeEvent
+    /*@SubscribeEvent
     public void onGuiOpen(GuiOpenEvent event) {
         if(event.getGui() instanceof GuiMainMenu) {
             if(PhysicsMod.instance.updateShown) return;
@@ -197,9 +375,9 @@ public class EventManager {
                 }
 
                 if(str != "" && str != PhysicsMod.VERSION.toString()) {
-                    System.out.println("Creating notification");
+                    //System.out.println("Creating notification");
                     //sleep(500);
-                    PhysicsMod.instance.infobox.displayInfoTitle("Physics Mod", I18n.format("physics.newversion.text"),0);
+                    //PhysicsMod.instance.infobox.displayInfoTitle("Physics Mod", I18n.format("physics.newversion.text"),0);
                     PhysicsMod.instance.updateShown = true;
                 }
             }
@@ -209,10 +387,10 @@ public class EventManager {
 
             //PhysicsMod.instance.updateInfobox();
         }
-    }
+    }*/
 
 
-    @SubscribeEvent
+    /*@SubscribeEvent
     public void drawHudText(RenderGameOverlayEvent.Text event) {
 
 
@@ -220,9 +398,9 @@ public class EventManager {
             //Minecraft.getMinecraft().fontRendererObj.drawString("Realistic Physics by kedlub", 0, 0, 0xffFFFFFF);
             Minecraft.getMinecraft().fontRendererObj.drawString("Rigidbody Count: " + PhysicsMod.blocks.size(), 5, 5, 0xffFFFFFF);
         }
-    }
+    }*/
 
-    @SubscribeEvent
+    /*@SubscribeEvent
     public void changeDimension(PlayerEvent.PlayerChangedDimensionEvent event) {
         if(event.toDim == -26 || event.toDim == -27) {
             PhysicsMod.instance.dynamicsWorld.setGravity(new Vector3f(0,0,0));
@@ -236,7 +414,7 @@ public class EventManager {
         else {
             PhysicsMod.instance.dynamicsWorld.setGravity(new Vector3f(0,-10,0));
         }
-    }
+    }*/
 
     @SideOnly(Side.CLIENT)
     @SubscribeEvent
@@ -271,7 +449,7 @@ public class EventManager {
 
 
 
-        for (int i = 0; i < PhysicsMod.blocks.size(); i++)
+        /*for (int i = 0; i < PhysicsMod.blocks.size(); i++)
         {
             GL11.glPushMatrix();
             GL11.glPushAttrib(GL11.GL_ENABLE_BIT);
@@ -294,7 +472,7 @@ public class EventManager {
             /*GL11.glRotatef(rot.x,1,0,0);
             GL11.glRotatef(rot.y,0,1,0);
             GL11.glRotatef(rot.z,0,0,1);*/
-            GL11.glTranslatef(0.5f,0.5f,0.5f);
+            /*GL11.glTranslatef(0.5f,0.5f,0.5f);
             block.xform.getOpenGLMatrix(matrix);
             //GL11.glTranslated(block.posX - 0.5, block.posY, block.posZ - 0.5);
 
@@ -313,7 +491,7 @@ public class EventManager {
 
 
 
-            float radius = 0.5f;
+            /*float radius = 0.5f;
             float posX = 0;
             float posY = 0f;
             float posZ = 0;
@@ -397,7 +575,7 @@ public class EventManager {
             t.draw();*/
 
 
-            String texture = Minecraft.getMinecraft().getBlockRendererDispatcher().getModelForState(block.block).getParticleTexture().getIconName();
+            /*String texture = Minecraft.getMinecraft().getBlockRendererDispatcher().getModelForState(block.block).getParticleTexture().getIconName();
             int character = texture.indexOf(":");
             String tex = texture.substring(0,character);
             String tex2 = texture.substring(character + 1);
@@ -406,14 +584,14 @@ public class EventManager {
             /*System.out.println(tex);
             System.out.println(tex2);*/
 
-            Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(tex,tex2));
+            //Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(tex,tex2));
             //System.out.println(texture);
 
             //tessellator.getBuffer().begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_LMAP_COLOR);
 
-            GL11.glBegin(GL_QUADS);
+            /*GL11.glBegin(GL_QUADS);
             //top
-            {
+            /*{
                 glColor3f(5.0f,1.0f,5.0f); // white
                 GL11.glTexCoord2f(0.0f, 1.0f);
                 glVertex3f(posX + radius, posY + radius, posZ - radius);
@@ -508,7 +686,7 @@ public class EventManager {
             GL11.glPopMatrix(); // Restore the saved transformation
             GL11.glPopAttrib();
             GL11.glPopMatrix();
-        }
+        }*/
 
 
 //...
@@ -584,7 +762,7 @@ public class EventManager {
         GL11.glEnd();
     }
 
-    @SideOnly(Side.CLIENT)
+    /*@SideOnly(Side.CLIENT)
     @SubscribeEvent(priority= EventPriority.NORMAL, receiveCanceled=true)
     public void onEvent(InputEvent.KeyInputEvent event) {
         // DEBUG
@@ -601,17 +779,17 @@ public class EventManager {
             EntityPlayer player = Minecraft.getMinecraft().player;
             World worldObj = Minecraft.getMinecraft().world;
 
-            EntityPhysicsBlock pb = new EntityPhysicsBlock(worldObj);
+            EntityPhysicsBlock pb = new EntityPhysicsBlock(worldObj, (float) player.posX - 0.5f, (float) player.posY - 2f, (float) player.posZ - 0.5f, 0, 0, 0, Blocks.STONE.getDefaultState());
             //pb.setPosition(player.posX,player.posY,player.posZ);
-            pb.init((float) player.posX - 0.5f, (float) player.posY - 2f, (float) player.posZ - 0.5f, 0, 0, 0, Blocks.STONE.getDefaultState());
             pb.forceSpawn = true;
+            worldObj.spawnEntity(pb);
 
             // do stuff for this key binding here
             // remember you may need to send packet to server
         }
 
         if (keyBindings[1].isPressed()) {
-            PhysicsMod.instance.infobox.displayInfo(I18n.format("physics.removeblock.text"));
+            //PhysicsMod.instance.infobox.displayInfo("Removed all blocks");
 
             if(PhysicsMod.blocks.size() > 0) {
                 //List<EntityPhysicsBlock> blocks2 = PhysicsMod.blocks;
@@ -621,9 +799,9 @@ public class EventManager {
                     block.setDead();
                 }
             }
-        }
+        }*/
 
-        if (keyBindings[2].isPressed()) {
+        /*if (keyBindings[2].isPressed()) {
             if(PhysicsMod.paused) {
                 PhysicsMod.paused = false;
                 PhysicsMod.instance.infobox.displayInfo("Unpaused");
@@ -632,6 +810,6 @@ public class EventManager {
                 PhysicsMod.paused = true;
                 PhysicsMod.instance.infobox.displayInfo("Paused");
             }
-        }
-    }
+        }*/
+    //}
 }

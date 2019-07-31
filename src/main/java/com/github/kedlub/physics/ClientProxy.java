@@ -9,7 +9,12 @@ import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
+import net.minecraftforge.fml.client.registry.IRenderFactory;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
+import net.minecraftforge.fml.common.event.FMLInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 import org.lwjgl.input.Keyboard;
 
 /**
@@ -19,15 +24,38 @@ public class ClientProxy extends CommonProxy {
 
     public static KeyBinding[] keyBindings;
 
-    public void preInit() {
-        super.preInit();
-        //RenderingRegistry.registerEntityRenderingHandler(EntityPhysicsBlock.class, RenderPhysicsBlock::new);
+    @Override
+    public void preInit(FMLPreInitializationEvent event) {
+        super.preInit(event);
+
+        //RenderingRegistry.registerEntityRenderingHandler(EntityPhysicsBlock.class, new RenderPhysicsBlock.RenderFactory());
+        //RenderingRegistry.registerEntityRenderingHandler(EntityPhysicsBlock.class, RenderPhysicsBlockFactory.INSTANCE);
+        System.out.println("Registered renderer for EntityPhysicsBlock");
+        RenderingRegistry.registerEntityRenderingHandler(EntityPhysicsBlock.class, RenderPhysicsBlock::new);
+        //RenderingRegistry.registerEntityRenderingHandler(EntityPhysicsBlock.class, new RenderPhysicsBlock.RenderFactory());
+        /*RenderingRegistry.registerEntityRenderingHandler(EntityPhysicsBlock.class, new IRenderFactory<EntityPhysicsBlock>()
+        {
+            @Override
+            public Render<? super EntityPhysicsBlock> createRenderFor(RenderManager manager)
+            {
+                return new RenderPhysicsBlock(manager);
+            }
+        });*/
+        /*RenderManager renderManager = Minecraft.getMinecraft().getRenderManager();
+        renderManager.entityRenderMap.put(EntityPhysicsBlock.class, new RenderPhysicsBlock(renderManager));*/
         //RenderingRegistry.registerEntityRenderingHandler(EntityPhysicsBlock.class, new RenderPhysicsBlock(Minecraft.getMinecraft().getRenderManager()));
     }
 
-    public void load() {
-        super.load();
+    @Override
+    public void load(FMLInitializationEvent event) {
+        super.load(event);
 
+        registerKeybinds();
+
+
+    }
+
+    public void registerKeybinds() {
         // declare an array of key bindings
         keyBindings = new KeyBinding[3];
 

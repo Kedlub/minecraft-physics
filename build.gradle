@@ -11,17 +11,19 @@ apply plugin: 'net.minecraftforge.gradle.forge'
 //Only edit below this line, the above code adds and enables the necessary things for Forge to be setup.
 
 
-version = "0.1"
+version = "0.1.1"
 group = "com.github.kedlub.physics" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "Physics Mod"
 
-sourceCompatibility = targetCompatibility = "1.6" // Need this here so eclipse task generates correctly.
+sourceCompatibility = targetCompatibility = JavaVersion.VERSION_1_8 // Need this here so eclipse task generates correctly.
 compileJava {
-    sourceCompatibility = targetCompatibility = "1.6"
+    sourceCompatibility = targetCompatibility = JavaVersion.VERSION_1_8
 }
 
 minecraft {
-    version = "1.11.2-13.20.0.2315"
+    //version = "1.11.2-13.20.0.2315"
+    version = "1.11.2-13.20.1.2386"
+    //version = "1.12.2-14.23.1.2555"
     runDir = "run"
     
     // the mappings can be changed at any time, and must be in the following format.

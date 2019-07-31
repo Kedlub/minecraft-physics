@@ -9,7 +9,7 @@ import net.minecraftforge.fml.client.registry.IRenderFactory;
  * Created by Kubik on 16.06.2017.
  */
 public class RenderPhysicsBlockFactory implements IRenderFactory<EntityPhysicsBlock> {
-    public static final RenderPhysicsBlockFactory instance = new RenderPhysicsBlockFactory();
+    public static final RenderPhysicsBlockFactory INSTANCE = new RenderPhysicsBlockFactory();
 
     @Override
     public Render<? super EntityPhysicsBlock> createRenderFor(RenderManager manager) {
