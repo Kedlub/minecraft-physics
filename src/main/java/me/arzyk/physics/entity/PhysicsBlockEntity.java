@@ -14,8 +14,11 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.Packet;
 import net.minecraft.network.packet.s2c.play.EntitySpawnS2CPacket;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.EulerAngle;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
+
+import javax.xml.crypto.Data;
 
 public class PhysicsBlockEntity extends Entity {
 
@@ -23,6 +26,7 @@ public class PhysicsBlockEntity extends Entity {
     @Nullable
     public NbtCompound blockEntityData;
     protected static final TrackedData<BlockPos> BLOCK_POS = DataTracker.registerData(PhysicsBlockEntity.class, TrackedDataHandlerRegistry.BLOCK_POS);
+    protected static final TrackedData<EulerAngle> ROTATION = DataTracker.registerData(PhysicsBlockEntity.class, TrackedDataHandlerRegistry.ROTATION);
 
     public PhysicsBlockEntity(EntityType<? extends Entity> entityType, World world) {
         super(entityType, world);
@@ -39,6 +43,7 @@ public class PhysicsBlockEntity extends Entity {
     @Override
     protected void initDataTracker() {
         this.dataTracker.startTracking(BLOCK_POS, BlockPos.ORIGIN);
+        this.dataTracker.startTracking(ROTATION, new EulerAngle(0,0,0));
     }
 
     @Override
