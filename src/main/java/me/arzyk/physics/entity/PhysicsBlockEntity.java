@@ -15,6 +15,8 @@ import net.minecraft.network.Packet;
 import net.minecraft.network.packet.s2c.play.EntitySpawnS2CPacket;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.EulerAngle;
+import net.minecraft.util.math.Quaternion;
+import net.minecraft.util.math.Vec3f;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
@@ -27,6 +29,7 @@ public class PhysicsBlockEntity extends Entity {
     public NbtCompound blockEntityData;
     protected static final TrackedData<BlockPos> BLOCK_POS = DataTracker.registerData(PhysicsBlockEntity.class, TrackedDataHandlerRegistry.BLOCK_POS);
     protected static final TrackedData<EulerAngle> ROTATION = DataTracker.registerData(PhysicsBlockEntity.class, TrackedDataHandlerRegistry.ROTATION);
+
 
     public PhysicsBlockEntity(EntityType<? extends Entity> entityType, World world) {
         super(entityType, world);
@@ -43,7 +46,7 @@ public class PhysicsBlockEntity extends Entity {
     @Override
     protected void initDataTracker() {
         this.dataTracker.startTracking(BLOCK_POS, BlockPos.ORIGIN);
-        this.dataTracker.startTracking(ROTATION, new EulerAngle(0,0,0));
+        this.dataTracker.startTracking(ROTATION, new EulerAngle(90,0,0));
     }
 
     @Override
@@ -58,6 +61,12 @@ public class PhysicsBlockEntity extends Entity {
 
     public BlockState getBlockState() {
         return this.block;
+    }
+
+    public Vec3f getRotation() {
+        EulerAngle eulerAngle = this.dataTracker.get(ROTATION);
+        Vec3f vec3f = new Vec3f(eulerAngle.getPitch(),eulerAngle.getYaw(),eulerAngle.getRoll());
+        return vec3f;
     }
 
     public Packet<?> createSpawnPacket() {
