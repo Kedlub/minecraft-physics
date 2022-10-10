@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "physics",
+  "version": "${version}",
+  "name": "Physics Mod",
+  "description": "",
+  "authors": [],
+  "contact": {},
+  "license": "MIT",
+  "icon": "assets/physics/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "client": [
+      "me.arzyk.physics.client.PhysicsClient"
+    ],
+    "main": [
+      "me.arzyk.physics.Physics"
+    ]
+  },
+  "mixins": [
+    "physics.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.14.9",
+    "fabric": "*",
+    "minecraft": "1.19.2"
+  }
+}
