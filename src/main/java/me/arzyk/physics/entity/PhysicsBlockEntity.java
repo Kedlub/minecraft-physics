@@ -15,6 +15,7 @@ import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtHelper;
 import net.minecraft.network.Packet;
 import net.minecraft.network.packet.s2c.play.EntitySpawnS2CPacket;
 import net.minecraft.util.math.BlockPos;
@@ -33,7 +34,7 @@ public class PhysicsBlockEntity extends Entity {
     @Nullable
     public NbtCompound blockEntityData;
     public RigidBody rigidBody;
-    public Transform transform;
+    public Transform transform = new Transform();
     public Quat4f physicsRotation = new Quat4f();
     protected static final TrackedData<BlockPos> BLOCK_POS = DataTracker.registerData(PhysicsBlockEntity.class, TrackedDataHandlerRegistry.BLOCK_POS);
     protected static final TrackedData<Quat4f> ROTATION = DataTracker.registerData(PhysicsBlockEntity.class, DataSerializers.QUAT4F);
@@ -49,9 +50,9 @@ public class PhysicsBlockEntity extends Entity {
             localBoxShape.calculateLocalInertia(20, inertia);
 
             var pos = this.getPos();
-            transform = new Transform();
             transform.setIdentity();
             transform.origin.set((float) pos.getX() - BLOCK_OFFSET.x, (float) pos.getY() - BLOCK_OFFSET.y, (float) pos.getZ() - BLOCK_OFFSET.z);
+            transform.setRotation(physicsRotation);
 
             this.rigidBody = new RigidBody(20, new DefaultMotionState(transform), localBoxShape, inertia);
             this.rigidBody.setRestitution(0.01F);
@@ -61,7 +62,7 @@ public class PhysicsBlockEntity extends Entity {
             //transform.origin.set((float) pos.getX(), (float) pos.getY(), (float) pos.getZ());
             //this.rigidBody.setCenterOfMassTransform(transform);
             var dimension = world.getDimensionKey().getValue().toString();
-            System.out.println("Spawning block rigidbody in " + dimension);
+            System.out.println("Spawning block rigidBody in " + dimension);
             Physics.dynamicWorlds.get(dimension).addRigidBody(rigidBody);
             //this.setCustomNameVisible(true);
             rigidBody.activate();
@@ -89,20 +90,37 @@ public class PhysicsBlockEntity extends Entity {
         this.dataTracker.startTracking(ROTATION, new Quat4f());
     }
 
+    // TODO Load rotation into rigidBody object, because now it will just get overriden
     @Override
     protected void readCustomDataFromNbt(NbtCompound nbt) {
-
+        this.block = NbtHelper.toBlockState(nbt.getCompound("BlockState"));
+        NbtCompound rotation = nbt.getCompound("Rotation");
+        if(rotation != null) {
+            this.physicsRotation = new Quat4f(rotation.getFloat("X"),rotation.getFloat("Y"),rotation.getFloat("Z"),rotation.getFloat("W"));
+            this.transform.setRotation(physicsRotation);
+        }
+        if (this.block.isAir()) {
+            this.block = Blocks.SAND.getDefaultState();
+        }
     }
 
     @Override
     protected void writeCustomDataToNbt(NbtCompound nbt) {
-
+        nbt.put("BlockState", NbtHelper.fromBlockState(this.block));
+        NbtCompound rotation = new NbtCompound();
+        rotation.putFloat("X", physicsRotation.x);
+        rotation.putFloat("Y", physicsRotation.y);
+        rotation.putFloat("Z", physicsRotation.z);
+        rotation.putFloat("W", physicsRotation.w);
+        nbt.put("Rotation", rotation);
     }
 
     public void kill() {
         super.kill();
-        if(!world.isClient)
-            this.rigidBody.destroy();
+        if(!world.isClient) {
+            Physics.getPhysicsWorld(this.world.getDimensionKey().getValue().toString()).removeRigidBody(this.rigidBody);
+        }
+
     }
 
     public void tick() {

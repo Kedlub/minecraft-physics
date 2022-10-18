@@ -39,6 +39,6 @@ public class WorldEventHandler {
     public static void onWorldTick(ServerWorld world) {
         String dimensionID = world.getDimensionKey().getValue().toString();
         MinecraftPhysicsWorld physicsWorld = Physics.dynamicWorlds.get(dimensionID);
-        physicsWorld.stepSimulation(0.026666668F);
+        physicsWorld.stepSimulation(0.05F);
     }
 }

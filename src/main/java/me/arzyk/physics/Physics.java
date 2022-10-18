@@ -35,4 +35,8 @@ public class Physics implements ModInitializer {
 
         DataSerializers.register();
     }
+
+    public static MinecraftPhysicsWorld getPhysicsWorld(String dimensionID) {
+        return dynamicWorlds.get(dimensionID);
+    }
 }
