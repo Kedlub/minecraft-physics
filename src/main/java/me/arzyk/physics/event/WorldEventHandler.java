@@ -32,6 +32,7 @@ public class WorldEventHandler {
     public static void onWorldUnload(MinecraftServer server, ServerWorld world) {
         String dimensionID = world.getDimensionKey().getValue().toString();
         System.out.println("Removing dynamicsWorld for dimension " + dimensionID);
+        Physics.dynamicWorlds.get(dimensionID).destroy();
         Physics.dynamicWorlds.remove(dimensionID);
     }
 

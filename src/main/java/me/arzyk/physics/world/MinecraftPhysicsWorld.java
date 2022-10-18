@@ -3,6 +3,7 @@ package me.arzyk.physics.world;
 import com.bulletphysics.collision.broadphase.BroadphaseInterface;
 import com.bulletphysics.collision.broadphase.Dispatcher;
 import com.bulletphysics.collision.dispatch.CollisionConfiguration;
+import com.bulletphysics.collision.dispatch.CollisionFlags;
 import com.bulletphysics.collision.shapes.BoxShape;
 import com.bulletphysics.collision.shapes.CollisionShape;
 import com.bulletphysics.collision.shapes.voxel.VoxelInfo;
@@ -12,6 +13,7 @@ import com.bulletphysics.dynamics.DiscreteDynamicsWorld;
 import com.bulletphysics.dynamics.RigidBody;
 import com.bulletphysics.dynamics.constraintsolver.ConstraintSolver;
 import com.bulletphysics.linearmath.DefaultMotionState;
+import com.bulletphysics.linearmath.Transform;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
@@ -40,10 +42,19 @@ public class MinecraftPhysicsWorld extends DiscreteDynamicsWorld {
 
         this.setGravity(new Vector3f(0,-10f,0));
         this.world = world;
-        this.physicsWorld = (x, y, z) -> generateVoxelInfo(x,y,z);
+        Transform transform = new Transform();
+        transform.setIdentity();
+        Transform transformOffset = new Transform();
+        transformOffset.setIdentity();
+        transformOffset.origin.set(0.25f,0.5f,0.25f);
+        this.physicsWorld = this::generateVoxelInfo;
         this.worldShape = new VoxelWorldShape(physicsWorld);
-        this.worldBody = new RigidBody(0, new DefaultMotionState(), this.worldShape);
+        this.worldShape.calculateLocalInertia(0, new Vector3f());
+        this.worldShape.setLocalScaling(new Vector3f(0.5f,0.5f,0.5f));
+        this.worldBody = new RigidBody(0, new DefaultMotionState(transform), this.worldShape);
+        this.worldBody.setCollisionFlags(CollisionFlags.STATIC_OBJECT | this.worldBody.getCollisionFlags());
         this.addRigidBody(worldBody);
+        this.updateSingleAabb(worldBody);
     }
 
     private VoxelInfo generateVoxelInfo(int x,int y, int z) {
@@ -56,7 +67,7 @@ public class MinecraftPhysicsWorld extends DiscreteDynamicsWorld {
         return new VoxelInfo() {
             @Override
             public boolean isColliding() {
-                return false;
+                return block.isFullCube(world, new BlockPos(x,y,z));
             }
 
             @Override
@@ -86,7 +97,7 @@ public class MinecraftPhysicsWorld extends DiscreteDynamicsWorld {
 
             @Override
             public float getRestitution() {
-                return 0;
+                return 0.2f;
             }
         };
     }
