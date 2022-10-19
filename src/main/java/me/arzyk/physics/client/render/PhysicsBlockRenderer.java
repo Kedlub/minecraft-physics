@@ -62,7 +62,7 @@ public class PhysicsBlockRenderer extends EntityRenderer<PhysicsBlockEntity> {
                 //matrixStack.multiplyPositionMatrix(matrix4f);
 
 
-                this.blockRenderManager.getModelRenderer().render(world, this.blockRenderManager.getModel(blockState), blockState, blockPos, matrixStack, vertexConsumerProvider.getBuffer(RenderLayers.getMovingBlockLayer(blockState)), false, Random.create(), blockState.getRenderingSeed(physicsBlockEntity.getBlockPos()), OverlayTexture.DEFAULT_UV);
+                this.blockRenderManager.getModelRenderer().render(world, this.blockRenderManager.getModel(blockState), blockState, blockPos, matrixStack, vertexConsumerProvider.getBuffer(RenderLayers.getMovingBlockLayer(blockState)), false, Random.create(), blockState.getRenderingSeed(physicsBlockEntity.getPhysicsBlockPos()), OverlayTexture.DEFAULT_UV);
                 matrixStack.pop();
                 super.render(physicsBlockEntity, f, g, matrixStack, vertexConsumerProvider, i);
             }
