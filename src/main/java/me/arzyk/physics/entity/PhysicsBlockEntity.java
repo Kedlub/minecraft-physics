@@ -92,7 +92,7 @@ public class PhysicsBlockEntity extends Entity {
 
     // This (along with some other parts) was proudly stolen from FallingBlockEntity
     public static PhysicsBlockEntity spawnFromBlock(World world, BlockPos pos, BlockState state) {
-        PhysicsBlockEntity physicsBlockEntity = new PhysicsBlockEntity(world, (double) pos.getX() + 0.5, (double) pos.getY(), (double) pos.getZ() + 0.5, state.contains(Properties.WATERLOGGED) ? (BlockState) state.with(Properties.WATERLOGGED, false) : state);
+        PhysicsBlockEntity physicsBlockEntity = new PhysicsBlockEntity(world, (double) pos.getX() + 0.5, (double) pos.getY() + 0.5, (double) pos.getZ() + 0.5, state.contains(Properties.WATERLOGGED) ? (BlockState) state.with(Properties.WATERLOGGED, false) : state);
         world.setBlockState(pos, state.getFluidState().getBlockState(), 3);
         world.spawnEntity(physicsBlockEntity);
         return physicsBlockEntity;
