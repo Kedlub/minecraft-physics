@@ -6,6 +6,7 @@ import com.bulletphysics.linearmath.DefaultMotionState;
 import com.bulletphysics.linearmath.Transform;
 import me.arzyk.physics.Physics;
 import me.arzyk.physics.network.DataSerializers;
+import me.arzyk.physics.util.VecUtils;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -15,6 +16,7 @@ import net.minecraft.entity.MovementType;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtHelper;
@@ -23,6 +25,7 @@ import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.network.Packet;
 import net.minecraft.network.packet.s2c.play.EntitySpawnS2CPacket;
+import net.minecraft.predicate.entity.EntityPredicates;
 import net.minecraft.state.property.Properties;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
@@ -31,6 +34,7 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.vecmath.Quat4f;
 import javax.vecmath.Vector3f;
+import java.util.List;
 
 public class PhysicsBlockEntity extends Entity {
 
@@ -190,12 +194,40 @@ public class PhysicsBlockEntity extends Entity {
 
             //System.out.println("tick");
             this.setPhysicsBlockRot(rotation);
-            this.setPositionInternal(position.x + (BLOCK_OFFSET.x), position.y + (BLOCK_OFFSET.y), position.z + (BLOCK_OFFSET.z));
+            if(shouldUpdatePosition(new BlockPos(VecUtils.toVec3d(position)))) {
+                this.setPositionInternal(position.x + (BLOCK_OFFSET.x), position.y + (BLOCK_OFFSET.y), position.z + (BLOCK_OFFSET.z));
+            }
             //this.setCustomName(Text.literal("X" + position.x + " Y" + position.y + " Z" + position.z));
         } else {
             //this.move(MovementType.SELF, this.getVelocity());
             this.physicsRotation = getPhysicsBlockRot();
         }
+    }
+
+    boolean shouldUpdatePosition(BlockPos newPos) {
+        return !newPos.isWithinDistance(this.getPos(), 0.005d);
+    }
+
+    public boolean collidesWith(Entity other) {
+        return canCollide(this, other);
+    }
+
+    public static boolean canCollide(Entity entity, Entity other) {
+        return (other.isCollidable() || other.isPushable());
+    }
+
+    public boolean isCollidable() {
+        return true;
+    }
+
+    public Vector3f renderPosition = new Vector3f();
+    public Quat4f renderRotation = new Quat4f();
+
+    public void interpolate() {
+        final float interp = 0.15f;
+        Vector3f newPos = VecUtils.toVector3f(this.getPos());
+        this.renderPosition.interpolate(newPos, interp);
+        this.renderRotation.interpolate(physicsRotation, interp);
     }
 
     void setPositionInternal(double x, double y, double z) {
@@ -213,6 +245,14 @@ public class PhysicsBlockEntity extends Entity {
                 this.rigidBody.setWorldTransform(transform);
             }
         }
+
+    }
+
+    protected void refreshPosition() {
+        super.refreshPosition();
+        if(!world.isClient)
+            this.rigidBody.activate();
+        this.renderPosition = VecUtils.toVector3f(this.getPos());
     }
 
     public BlockState getBlockState() {

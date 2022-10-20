@@ -41,6 +41,7 @@ public class PhysicsBlockRenderer extends EntityRenderer<PhysicsBlockEntity> {
         if (blockState.getRenderType() == BlockRenderType.MODEL) {
             World world = physicsBlockEntity.getWorld();
             if (blockState != world.getBlockState(physicsBlockEntity.getBlockPos()) && blockState.getRenderType() != BlockRenderType.INVISIBLE) {
+                physicsBlockEntity.interpolate();
                 matrixStack.push();
                 BlockPos blockPos = new BlockPos(physicsBlockEntity.getX(), physicsBlockEntity.getBoundingBox().maxY, physicsBlockEntity.getZ());
 
@@ -62,7 +63,7 @@ public class PhysicsBlockRenderer extends EntityRenderer<PhysicsBlockEntity> {
                 //matrixStack.multiplyPositionMatrix(matrix4f);
 
 
-                this.blockRenderManager.getModelRenderer().render(world, this.blockRenderManager.getModel(blockState), blockState, blockPos, matrixStack, vertexConsumerProvider.getBuffer(RenderLayers.getMovingBlockLayer(blockState)), false, Random.create(), blockState.getRenderingSeed(physicsBlockEntity.getPhysicsBlockPos()), OverlayTexture.DEFAULT_UV);
+                this.blockRenderManager.getModelRenderer().render(world, this.blockRenderManager.getModel(blockState), blockState, new BlockPos(VecUtils.toVec3d(physicsBlockEntity.renderPosition)), matrixStack, vertexConsumerProvider.getBuffer(RenderLayers.getMovingBlockLayer(blockState)), false, Random.create(), blockState.getRenderingSeed(physicsBlockEntity.getPhysicsBlockPos()), OverlayTexture.DEFAULT_UV);
                 matrixStack.pop();
                 super.render(physicsBlockEntity, f, g, matrixStack, vertexConsumerProvider, i);
             }
