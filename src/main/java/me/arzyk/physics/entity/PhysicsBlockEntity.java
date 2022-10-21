@@ -12,20 +12,15 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
-import net.minecraft.entity.MovementType;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtHelper;
 import net.minecraft.nbt.NbtList;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.nbt.NbtList;
 import net.minecraft.network.Packet;
 import net.minecraft.network.packet.s2c.play.EntitySpawnS2CPacket;
-import net.minecraft.predicate.entity.EntityPredicates;
 import net.minecraft.state.property.Properties;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
@@ -34,7 +29,6 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.vecmath.Quat4f;
 import javax.vecmath.Vector3f;
-import java.util.List;
 
 public class PhysicsBlockEntity extends Entity {
 
@@ -205,7 +199,7 @@ public class PhysicsBlockEntity extends Entity {
     }
 
     boolean shouldUpdatePosition(BlockPos newPos) {
-        return !newPos.isWithinDistance(this.getPos(), 0.005d);
+        return !newPos.isWithinDistance(this.getPos(), 0.01d);
     }
 
     public boolean collidesWith(Entity other) {

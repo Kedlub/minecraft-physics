@@ -4,6 +4,7 @@
   "package": "me.arzyk.physics.mixin",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
+    "ExplosionMixin"
   ],
   "client": [
   ],
