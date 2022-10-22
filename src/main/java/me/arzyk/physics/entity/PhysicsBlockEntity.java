@@ -34,7 +34,7 @@ public class PhysicsBlockEntity extends Entity {
 
     static final Vector3f BLOCK_SIZE = new Vector3f(0.5f, 0.5f, 0.5f);
     static final BoxShape BLOCK_SHAPE = new BoxShape(BLOCK_SIZE);
-    static final Vector3f BLOCK_OFFSET = new Vector3f(0.5f, 0.5f, 0.5f);
+    static final Vector3f BLOCK_OFFSET = new Vector3f(0.5f, 0f, 0.5f);
     public BlockState block;
     @Nullable
     public NbtCompound blockEntityData;
@@ -120,7 +120,6 @@ public class PhysicsBlockEntity extends Entity {
         this.dataTracker.startTracking(ROTATION, new Quat4f());
     }
 
-    // TODO Load rotation into rigidBody object, because now it will just get overriden
     @Override
     protected void readCustomDataFromNbt(NbtCompound nbt) {
         this.block = NbtHelper.toBlockState(nbt.getCompound("BlockState"));
@@ -188,9 +187,9 @@ public class PhysicsBlockEntity extends Entity {
 
             //System.out.println("tick");
             this.setPhysicsBlockRot(rotation);
-            if(shouldUpdatePosition(new BlockPos(VecUtils.toVec3d(position)))) {
-                this.setPositionInternal(position.x + (BLOCK_OFFSET.x), position.y + (BLOCK_OFFSET.y), position.z + (BLOCK_OFFSET.z));
-            }
+            //if(shouldUpdatePosition(new BlockPos(VecUtils.toVec3d(position)))) {
+            this.setPositionInternal(position.x + (BLOCK_OFFSET.x), position.y + (BLOCK_OFFSET.y), position.z + (BLOCK_OFFSET.z));
+            //}
             //this.setCustomName(Text.literal("X" + position.x + " Y" + position.y + " Z" + position.z));
         } else {
             //this.move(MovementType.SELF, this.getVelocity());

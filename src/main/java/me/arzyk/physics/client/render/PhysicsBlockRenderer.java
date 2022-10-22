@@ -55,10 +55,10 @@ public class PhysicsBlockRenderer extends EntityRenderer<PhysicsBlockEntity> {
 
                 //matrixStack.translate(0.5f,0.5f,0.5f);
                 Quat4f quat = physicsBlockEntity.getRotation();
-                //matrixStack.translate(0,0.5,0);
+                matrixStack.translate(0,0.5f,0);
                 matrixStack.multiply(new Quaternion(quat.x,quat.y,quat.z,quat.w));
-                //matrixStack.translate(0,-0.5,0);
-                matrixStack.translate(-0.5, -0.5, -0.5);
+                matrixStack.translate(0,-0.5f,0);
+                matrixStack.translate(-0.5, 0f, -0.5);
 
                 //matrixStack.multiplyPositionMatrix(matrix4f);
 

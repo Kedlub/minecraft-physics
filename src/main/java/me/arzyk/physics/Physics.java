@@ -26,7 +26,7 @@ public class Physics implements ModInitializer {
     public static final EntityType<PhysicsBlockEntity> PHYS_BLOCK = Registry.register(
             Registry.ENTITY_TYPE,
             new Identifier("physics", "phys_block"),
-            FabricEntityTypeBuilder.create(SpawnGroup.MISC, PhysicsBlockEntity::new).dimensions(EntityDimensions.fixed(0.75f, 0.75f)).build()
+            FabricEntityTypeBuilder.create(SpawnGroup.MISC, PhysicsBlockEntity::new).dimensions(EntityDimensions.fixed(1f, 1f)).build()
     );
 
     public static final Item PHYSICS_WAND = new WandItem(new FabricItemSettings().group(ItemGroup.MISC));

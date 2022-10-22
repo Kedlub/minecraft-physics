@@ -22,12 +22,21 @@ import java.util.Random;
 public class ExplosionMixin {
     @Shadow @Final private World world;
 
+    @Shadow @Final private double x;
+
+    @Shadow @Final private double z;
+
+    @Shadow @Final private float power;
+
     @Inject(method = "affectWorld(Z)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/BlockState;getBlock()Lnet/minecraft/block/Block;", shift = At.Shift.AFTER), locals = LocalCapture.CAPTURE_FAILHARD)
     public void affectWorld(boolean particles, CallbackInfo ci, boolean bl, ObjectArrayList objectArrayList, boolean bl2, ObjectListIterator var5, BlockPos blockPos, BlockState blockState) {
         if(!blockState.isAir()) {
             if(!world.isClient()) {
                 PhysicsBlockEntity entity = PhysicsBlockEntity.spawnFromBlock(world, blockPos, blockState);
-                entity.rigidBody.setLinearVelocity(new Vector3f(0, new Random().nextInt(30), 0));
+                double xDist = blockPos.getX() - x;
+                double zDist = blockPos.getZ() - z;
+                double force = power * 3;
+                entity.rigidBody.setLinearVelocity(new Vector3f((float) (xDist * force), new Random().nextFloat(30), (float) (zDist * force)));
             }
         }
     }
