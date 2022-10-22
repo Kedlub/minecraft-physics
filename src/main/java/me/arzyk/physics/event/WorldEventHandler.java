@@ -10,8 +10,16 @@ import com.bulletphysics.dynamics.constraintsolver.ConstraintSolver;
 import com.bulletphysics.dynamics.constraintsolver.SequentialImpulseConstraintSolver;
 import me.arzyk.physics.Physics;
 import me.arzyk.physics.world.MinecraftPhysicsWorld;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
+import net.minecraft.world.World;
+
+import javax.vecmath.Vector3f;
 
 public class WorldEventHandler {
 
@@ -40,5 +48,16 @@ public class WorldEventHandler {
         String dimensionID = world.getDimensionKey().getValue().toString();
         MinecraftPhysicsWorld physicsWorld = Physics.dynamicWorlds.get(dimensionID);
         physicsWorld.stepSimulation(0.05F);
+    }
+
+
+    static final Box AWAKE_BOX = new Box(-5,-5,-5,5,5,5);
+    public static void afterBlockBreak(World world, PlayerEntity player, BlockPos pos, BlockState state, BlockEntity blockEntity) {
+        if(!world.isClient()) {
+            String dimensionID = world.getDimensionKey().getValue().toString();
+            MinecraftPhysicsWorld physicsWorld = Physics.dynamicWorlds.get(dimensionID);
+            Box box = AWAKE_BOX.offset(pos);
+            physicsWorld.awakenRigidBodiesInArea(new Vector3f((float) box.minX, (float) box.minY, (float) box.minZ), new Vector3f((float) box.maxX, (float) box.maxY, (float) box.maxZ));
+        }
     }
 }

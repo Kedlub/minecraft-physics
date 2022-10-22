@@ -8,6 +8,7 @@ import me.arzyk.physics.world.MinecraftPhysicsWorld;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
+import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
 import net.minecraft.entity.EntityDimensions;
@@ -38,6 +39,7 @@ public class Physics implements ModInitializer {
         ServerWorldEvents.LOAD.register(WorldEventHandler::onWorldLoad);
         ServerWorldEvents.UNLOAD.register(WorldEventHandler::onWorldUnload);
         ServerTickEvents.START_WORLD_TICK.register(WorldEventHandler::onWorldTick);
+        PlayerBlockBreakEvents.AFTER.register(WorldEventHandler::afterBlockBreak);
 
         Registry.register(Registry.ITEM, new Identifier("physics", "physics_wand"), PHYSICS_WAND);
 
