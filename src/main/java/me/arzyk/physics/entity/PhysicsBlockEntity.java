@@ -48,6 +48,8 @@ public class PhysicsBlockEntity extends Entity {
     public PhysicsBlockEntity(EntityType<? extends Entity> entityType, World world) {
         super(entityType, world);
         this.block = Blocks.SAND.getDefaultState();
+        this.ignoreCameraFrustum = true;
+        this.intersectionChecked = true;
 
         if (!world.isClient()) {
             BoxShape localBoxShape = BLOCK_SHAPE;
@@ -90,7 +92,7 @@ public class PhysicsBlockEntity extends Entity {
 
     // This (along with some other parts) was proudly stolen from FallingBlockEntity
     public static PhysicsBlockEntity spawnFromBlock(World world, BlockPos pos, BlockState state) {
-        PhysicsBlockEntity physicsBlockEntity = new PhysicsBlockEntity(world, (double) pos.getX() + 0.5, (double) pos.getY() + 0.5, (double) pos.getZ() + 0.5, state.contains(Properties.WATERLOGGED) ? (BlockState) state.with(Properties.WATERLOGGED, false) : state);
+        PhysicsBlockEntity physicsBlockEntity = new PhysicsBlockEntity(world, (double) pos.getX() + 0.5, (double) pos.getY(), (double) pos.getZ() + 0.5, state.contains(Properties.WATERLOGGED) ? (BlockState) state.with(Properties.WATERLOGGED, false) : state);
         world.setBlockState(pos, state.getFluidState().getBlockState(), 3);
         world.spawnEntity(physicsBlockEntity);
         return physicsBlockEntity;
@@ -218,7 +220,11 @@ public class PhysicsBlockEntity extends Entity {
 
     public void interpolate() {
         final float interp = 0.15f;
-        Vector3f newPos = VecUtils.toVector3f(this.getPos());
+        Vector3f newPos = VecUtils.toVector3f(new Vec3d(this.getPos().x, this.getBoundingBox().maxY - 1, this.getPos().z));
+        if(!isWithinDistance(this.renderPosition, newPos, 100)) {
+            //System.out.println("Changing renderPosition...");
+            this.renderPosition = newPos;
+        }
         this.renderPosition.interpolate(newPos, interp);
         this.renderRotation.interpolate(physicsRotation, interp);
     }
@@ -238,14 +244,28 @@ public class PhysicsBlockEntity extends Entity {
                 this.rigidBody.setWorldTransform(transform);
             }
         }
+        else if(world.isClient() && this.getPos() != null && this.renderPosition != null) {
 
+        }
     }
 
     protected void refreshPosition() {
         super.refreshPosition();
         if(!world.isClient)
             this.rigidBody.activate();
-        this.renderPosition = VecUtils.toVector3f(this.getPos());
+    }
+
+    boolean isWithinDistance(Vector3f pos1, Vector3f pos2, float dist) {
+        /*float xDist = Math.abs(pos1.x - pos2.x);
+        //System.out.println("X Distance between " + pos1.x + " and " + pos2.x + " is " + xDist);
+        float yDist = Math.abs(pos1.y - pos2.y);
+        //System.out.println("Y Distance between " + pos1.y + " and " + pos2.y + " is " + yDist);
+        float zDist = Math.abs(pos1.z - pos2.z);
+        //System.out.println("Z Distance between " + pos1.z + " and " + pos2.z + " is " + zDist);
+        return (xDist < dist) && (yDist < dist) && (zDist < dist);*/
+        BlockPos position1 = new BlockPos(VecUtils.toVec3d(pos1));
+        BlockPos position2 = new BlockPos(VecUtils.toVec3d(pos2));
+        return position1.isWithinDistance(position2, dist);
     }
 
     public BlockState getBlockState() {
