@@ -7,7 +7,3 @@
 - [x] Mixin on explosion event to spawn them
 - [ ] Automatic despawning/solidifying from "naturally" spawned blocks
 - [ ] Interacting with physics blocks (such as mining)
-
-## Known issues
-- Physics Blocks have buggy lighting when on ground
-- Interpolation randomly stops working
