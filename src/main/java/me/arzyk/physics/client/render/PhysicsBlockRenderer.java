@@ -14,8 +14,6 @@ import net.minecraft.client.render.entity.EntityRendererFactory;
 import net.minecraft.client.texture.SpriteAtlasTexture;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Matrix4f;
 import net.minecraft.util.math.Quaternion;
 import net.minecraft.world.World;
@@ -38,48 +36,39 @@ public class PhysicsBlockRenderer extends EntityRenderer<PhysicsBlockEntity> {
 
     public boolean shouldRender(PhysicsBlockEntity entity, Frustum frustum, double x, double y, double z) {
         entity.interpolate();
-        x = entity.renderPosition.x;
-        y = entity.renderPosition.y;
-        z = entity.renderPosition.z;
 
-        if (!entity.shouldRender(x, y, z)) {
-            return false;
-        }
-        if (entity.ignoreCameraFrustum) {
-            return true;
-        }
-        Box box = entity.getVisibilityBoundingBox().expand(0.5);
-        if (box.isValid() || box.getAverageSideLength() == 0.0) {
-            box = new Box(entity.getX() - 2.0, entity.getY() - 2.0, entity.getZ() - 2.0, entity.getX() + 2.0, entity.getY() + 2.0, entity.getZ() + 2.0);
-        }
-        return frustum.isVisible(box);
+        return super.shouldRender(entity, frustum, x, y , z);
     }
 
     public void render(PhysicsBlockEntity physicsBlockEntity, float yaw, float tickDelta, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int light) {
         BlockState blockState = physicsBlockEntity.getBlockState();
         if (blockState.getRenderType() == BlockRenderType.MODEL) {
             World world = physicsBlockEntity.getWorld();
-            if (blockState != world.getBlockState(physicsBlockEntity.getBlockPos()) && blockState.getRenderType() != BlockRenderType.INVISIBLE) {
+            if (blockState.getRenderType() != BlockRenderType.INVISIBLE) {
                 matrixStack.push();
                 matrixStack.translate(-physicsBlockEntity.getX(), -physicsBlockEntity.getY(), -physicsBlockEntity.getZ());
                 matrixStack.translate(physicsBlockEntity.renderPosition.x, physicsBlockEntity.renderPosition.y, physicsBlockEntity.renderPosition.z);
-                BlockPos blockPos = new BlockPos(physicsBlockEntity.getX(), physicsBlockEntity.getBoundingBox().maxY, physicsBlockEntity.getZ());
+                //BlockPos blockPos = new BlockPos(physicsBlockEntity.getX(), physicsBlockEntity.getBoundingBox().maxY, physicsBlockEntity.getZ());
 
                 transform.setIdentity();
-                transform.origin.set(VecUtils.toVector3f(physicsBlockEntity.getPos()));
-                transform.setRotation(physicsBlockEntity.getRotation());
+                transform.origin.set(physicsBlockEntity.renderPosition);
+                transform.setRotation(physicsBlockEntity.renderRotation);
                 VecUtils.setBufferFromTransform(renderMatrix, transform);
                 Matrix4f matrix4f = new Matrix4f();
-                matrix4f.writeRowMajor(renderMatrix);
+                matrix4f.writeColumnMajor(renderMatrix);
 
 
                 //matrixStack.translate(0.5f,0.5f,0.5f);
                 Quat4f quat = physicsBlockEntity.getRotation();
 
+
                 matrixStack.translate(0,0.5f,0);
                 matrixStack.multiply(new Quaternion(quat.x,quat.y,quat.z,quat.w));
                 matrixStack.translate(0,-0.5f,0);
                 matrixStack.translate(-0.5, 0f, -0.5);
+
+
+                //matrixStack.multiplyPositionMatrix(matrix4f);
 
 
                 //matrixStack.multiplyPositionMatrix(matrix4f);

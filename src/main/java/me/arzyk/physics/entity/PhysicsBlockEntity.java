@@ -181,26 +181,32 @@ public class PhysicsBlockEntity extends Entity {
             //System.out.println("Block orientation is " + rotation.x + " " + rotation.y + " " + rotation.z + " " + rotation.w);
             this.rigidBody.getAngularVelocity(vel);
 
-            this.prevX = this.getPos().x;
-            this.prevY = this.getPos().y;
-            this.prevZ = this.getPos().z;
-
-            this.setVelocity(vel.x, vel.y, vel.z);
+            //this.setVelocity(vel.x, vel.y, vel.z);
 
             //System.out.println("tick");
             this.setPhysicsBlockRot(rotation);
-            //if(shouldUpdatePosition(new BlockPos(VecUtils.toVec3d(position)))) {
-            this.setPositionInternal(position.x + (BLOCK_OFFSET.x), position.y + (BLOCK_OFFSET.y), position.z + (BLOCK_OFFSET.z));
+            position.add(new Vector3f(BLOCK_OFFSET.x,BLOCK_OFFSET.y,BLOCK_OFFSET.z));
+            //if(shouldUpdatePosition(VecUtils.toVec3d(position))) {
+            this.setPositionInternal(position.x, position.y, position.z);
             //}
             //this.setCustomName(Text.literal("X" + position.x + " Y" + position.y + " Z" + position.z));
         } else {
             //this.move(MovementType.SELF, this.getVelocity());
+            this.onGround = false;
             this.physicsRotation = getPhysicsBlockRot();
         }
+
+        this.prevX = this.getPos().x;
+        this.prevY = this.getPos().y;
+        this.prevZ = this.getPos().z;
     }
 
-    boolean shouldUpdatePosition(BlockPos newPos) {
-        return !newPos.isWithinDistance(this.getPos(), 0.01d);
+    boolean shouldUpdatePosition(Vec3d newPos) {
+        System.out.println(this.getPos());
+        System.out.println(newPos);
+        boolean shouldUpdate = !newPos.isInRange(this.getPos(), 0.1d);
+        System.out.println("Should update position: " + shouldUpdate);
+        return shouldUpdate;
     }
 
     public boolean collidesWith(Entity other) {
@@ -220,8 +226,8 @@ public class PhysicsBlockEntity extends Entity {
 
     public void interpolate() {
         final float interp = 0.15f;
-        Vector3f newPos = VecUtils.toVector3f(new Vec3d(this.getPos().x, this.getBoundingBox().maxY - 1, this.getPos().z));
-        if(!isWithinDistance(this.renderPosition, newPos, 100)) {
+        Vector3f newPos = VecUtils.toVector3f(new Vec3d(this.getPos().x, this.getBoundingBox().maxY - 1d, this.getPos().z));
+        if(!isWithinDistance(this.renderPosition, newPos, 50)) {
             //System.out.println("Changing renderPosition...");
             this.renderPosition = newPos;
         }
@@ -263,9 +269,9 @@ public class PhysicsBlockEntity extends Entity {
         float zDist = Math.abs(pos1.z - pos2.z);
         //System.out.println("Z Distance between " + pos1.z + " and " + pos2.z + " is " + zDist);
         return (xDist < dist) && (yDist < dist) && (zDist < dist);*/
-        BlockPos position1 = new BlockPos(VecUtils.toVec3d(pos1));
-        BlockPos position2 = new BlockPos(VecUtils.toVec3d(pos2));
-        return position1.isWithinDistance(position2, dist);
+        Vec3d position1 = VecUtils.toVec3d(pos1);
+        Vec3d position2 = VecUtils.toVec3d(pos2);
+        return position1.isInRange(position2, dist);
     }
 
     public BlockState getBlockState() {
