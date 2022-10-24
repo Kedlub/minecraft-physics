@@ -47,9 +47,8 @@ public class WorldEventHandler {
     public static void onWorldTick(ServerWorld world) {
         String dimensionID = world.getDimensionKey().getValue().toString();
         MinecraftPhysicsWorld physicsWorld = Physics.dynamicWorlds.get(dimensionID);
-        physicsWorld.stepSimulation(0.05F);
+        physicsWorld.update();
     }
-
 
     static final Box AWAKE_BOX = new Box(-5,-5,-5,5,5,5);
     public static void afterBlockBreak(World world, PlayerEntity player, BlockPos pos, BlockState state, BlockEntity blockEntity) {

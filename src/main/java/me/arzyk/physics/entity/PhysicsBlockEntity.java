@@ -23,6 +23,7 @@ import net.minecraft.network.Packet;
 import net.minecraft.network.packet.s2c.play.EntitySpawnS2CPacket;
 import net.minecraft.state.property.Properties;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
@@ -38,6 +39,8 @@ public class PhysicsBlockEntity extends Entity {
     public BlockState block;
     @Nullable
     public NbtCompound blockEntityData;
+    public boolean shouldSolidify = false;
+    public int solidifyTick = 40;
     public RigidBody rigidBody;
     public Transform transform = new Transform();
     public Quat4f physicsRotation = new Quat4f();
@@ -66,10 +69,10 @@ public class PhysicsBlockEntity extends Entity {
             this.rigidBody = new RigidBody(20, new DefaultMotionState(transform), localBoxShape, inertia);
             this.rigidBody.setRestitution(0.01F);
             this.rigidBody.setFriction(0.8F);
-            this.rigidBody.setDamping(0.4F, 0.4F);
+            this.rigidBody.setDamping(0.2F, 0.4F);
 
             var dimension = world.getDimensionKey().getValue().toString();
-            System.out.println("Spawning block rigidBody in " + dimension);
+            //System.out.println("Spawning block rigidBody in " + dimension);
             Physics.dynamicWorlds.get(dimension).addRigidBody(rigidBody);
             rigidBody.activate();
         }
@@ -93,10 +96,6 @@ public class PhysicsBlockEntity extends Entity {
         world.setBlockState(pos, state.getFluidState().getBlockState(), 3);
         world.spawnEntity(physicsBlockEntity);
         return physicsBlockEntity;
-    }
-
-    public BlockPos getPhysicsBlockPos() {
-        return this.dataTracker.get(BLOCK_POS);
     }
 
     public Quat4f getPhysicsBlockRot() {
@@ -142,14 +141,18 @@ public class PhysicsBlockEntity extends Entity {
         nbt.put("PhysicsRotation", toNbtList(physicsRotation.x, physicsRotation.y, physicsRotation.z, physicsRotation.w));
     }
 
-    public void kill() {
-        super.kill();
+    private BlockPos getPhysicsBlockPos() {
+        Vec3d position = getPos().add(0.5f, 1, 0.5f);
+        return new BlockPos(MathHelper.floor(position.x), MathHelper.floor(position.y), MathHelper.floor(position.z));
+    }
+
+    public void remove(RemovalReason reason) {
+        super.remove(reason);
         if (!world.isClient) {
             String dimensionID = this.world.getDimensionKey().getValue().toString();
-            System.out.println("Removing rigidBody from dimension " + dimensionID);
+            //System.out.println("Removing rigidBody from dimension " + dimensionID);
             Physics.getPhysicsWorld(dimensionID).removeRigidBody(this.rigidBody);
         }
-
     }
 
     public void tick() {
@@ -170,6 +173,16 @@ public class PhysicsBlockEntity extends Entity {
             this.setPhysicsBlockRot(rotation);
             position.add(new Vector3f(BLOCK_OFFSET.x,BLOCK_OFFSET.y,BLOCK_OFFSET.z));
             this.setPositionInternal(position.x, position.y, position.z);
+
+            if(shouldSolidify && (!this.rigidBody.isActive() || world.getBlockState(this.getPhysicsBlockPos()).isSolidBlock(world, this.getPhysicsBlockPos()))) {
+                solidifyTick--;
+                if(solidifyTick <= 0) {
+                    placeBlock();
+                }
+            }
+            else {
+                solidifyTick = 40;
+            }
         } else {
             //this.move(MovementType.SELF, this.getVelocity());
             this.onGround = false;
@@ -187,6 +200,16 @@ public class PhysicsBlockEntity extends Entity {
         boolean shouldUpdate = !newPos.isInRange(this.getPos(), 0.1d);
         System.out.println("Should update position: " + shouldUpdate);
         return shouldUpdate;
+    }
+
+    void placeBlock() {
+        /*if(this.world.canSetBlock(this.getPhysicsBlockPos())) {
+            this.world.setBlockState(this.getPhysicsBlockPos(), this.getBlockState());
+        }
+        else {*/
+            this.dropItem(block.getBlock());
+        //}
+        this.discard();
     }
 
     public boolean collidesWith(Entity other) {
@@ -207,7 +230,7 @@ public class PhysicsBlockEntity extends Entity {
     public void interpolate() {
         final float interp = 0.15f;
         Vector3f newPos = VecUtils.toVector3f(new Vec3d(this.getPos().x, this.getBoundingBox().maxY - 1d, this.getPos().z));
-        if(!isWithinDistance(this.renderPosition, newPos, 50)) {
+        if(!isWithinDistance(this.renderPosition, newPos, 10)) {
             this.renderPosition = newPos;
         }
         this.renderPosition.interpolate(newPos, interp);
@@ -223,7 +246,7 @@ public class PhysicsBlockEntity extends Entity {
 
         if (!world.isClient() && this.transform != null) {
             rigidBody.getWorldTransform(this.transform);
-            System.out.println("Setting physBlock position to " + x + " " + y + " " + z);
+            //System.out.println("Setting physBlock position to " + x + " " + y + " " + z);
             transform.origin.set((float) x - BLOCK_OFFSET.x, (float) y - BLOCK_OFFSET.y, (float) z - BLOCK_OFFSET.z);
             if (rigidBody != null) {
                 this.rigidBody.setWorldTransform(transform);

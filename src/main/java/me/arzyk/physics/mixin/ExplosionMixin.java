@@ -4,6 +4,7 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectListIterator;
 import me.arzyk.physics.entity.PhysicsBlockEntity;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.explosion.Explosion;
@@ -33,10 +34,12 @@ public class ExplosionMixin {
         if(!blockState.isAir()) {
             if(!world.isClient()) {
                 PhysicsBlockEntity entity = PhysicsBlockEntity.spawnFromBlock(world, blockPos, blockState);
+                entity.shouldSolidify = true;
                 double xDist = blockPos.getX() - x;
                 double zDist = blockPos.getZ() - z;
                 double force = power * 3;
                 entity.rigidBody.setLinearVelocity(new Vector3f((float) (xDist * force), new Random().nextFloat(30), (float) (zDist * force)));
+                blockState = Blocks.AIR.getDefaultState();
             }
         }
     }

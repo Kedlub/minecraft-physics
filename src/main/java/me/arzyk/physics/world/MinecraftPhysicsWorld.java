@@ -17,6 +17,7 @@ import com.bulletphysics.linearmath.Transform;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 
 import javax.vecmath.Vector3f;
@@ -100,5 +101,53 @@ public class MinecraftPhysicsWorld extends DiscreteDynamicsWorld {
                 return 0.2f;
             }
         };
+    }
+
+    public void update() {
+        this.stepSimulation(1F, getMaxSubstep());
+    }
+
+    /**
+     * time at last frame
+     */
+    long lastFrame;
+    /**
+     * frames per second
+     */
+    int tps;
+    /**
+     * last fps time
+     */
+    long lastFPS;
+
+    /**
+     * Calculate how many milliseconds have passed
+     * since last frame.
+     *
+     * @return milliseconds passed since last frame
+     */
+    public int getDelta() {
+        long time = getTime();
+        int delta = (int) (time - lastFrame);
+        lastFrame = time;
+
+        return delta;
+    }
+
+    /**
+     * Get the accurate system time
+     *
+     * @return The system time in milliseconds
+     */
+    public long getTime() {
+        return System.currentTimeMillis();
+//        return (Sys.getTime() * 1000) / Sys.getTimerResolution();
+    }
+
+    protected float lastDelta;
+
+    public int getMaxSubstep() {
+        lastDelta = getDelta();
+        return MathHelper.clamp(Math.round(lastDelta / 10), 1, 100);
     }
 }
