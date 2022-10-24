@@ -68,12 +68,9 @@ public class PhysicsBlockEntity extends Entity {
             this.rigidBody.setFriction(0.8F);
             this.rigidBody.setDamping(0.4F, 0.4F);
 
-            //transform.origin.set((float) pos.getX(), (float) pos.getY(), (float) pos.getZ());
-            //this.rigidBody.setCenterOfMassTransform(transform);
             var dimension = world.getDimensionKey().getValue().toString();
             System.out.println("Spawning block rigidBody in " + dimension);
             Physics.dynamicWorlds.get(dimension).addRigidBody(rigidBody);
-            //this.setCustomNameVisible(true);
             rigidBody.activate();
         }
     }
@@ -125,11 +122,6 @@ public class PhysicsBlockEntity extends Entity {
     @Override
     protected void readCustomDataFromNbt(NbtCompound nbt) {
         this.block = NbtHelper.toBlockState(nbt.getCompound("BlockState"));
-        /*NbtCompound rotation = nbt.getCompound("Rotation");
-        if(rotation != null) {
-        this.physicsRotation = new Quat4f(rotation.getFloat("X"),rotation.getFloat("Y"),rotation.getFloat("Z"),rotation.getFloat("W"));
-        this.transform.setRotation(physicsRotation);
-        }*/
         NbtList list = nbt.getList("PhysicsRotation", NbtElement.FLOAT_TYPE);
         Quat4f quat4f = new Quat4f(list.getFloat(0), list.getFloat(1), list.getFloat(2), list.getFloat(3));
         if (!Float.isNaN(quat4f.x)) {
@@ -148,12 +140,6 @@ public class PhysicsBlockEntity extends Entity {
     protected void writeCustomDataToNbt(NbtCompound nbt) {
         nbt.put("BlockState", NbtHelper.fromBlockState(this.block));
         nbt.put("PhysicsRotation", toNbtList(physicsRotation.x, physicsRotation.y, physicsRotation.z, physicsRotation.w));
-        /*NbtCompound rotation = new NbtCompound();
-        rotation.putFloat("X", physicsRotation.x);
-        rotation.putFloat("Y", physicsRotation.y);
-        rotation.putFloat("Z", physicsRotation.z);
-        rotation.putFloat("W", physicsRotation.w);
-        nbt.put("Rotation", rotation);*/
     }
 
     public void kill() {
@@ -177,19 +163,13 @@ public class PhysicsBlockEntity extends Entity {
             this.rigidBody.getWorldTransform(this.transform);
             this.rigidBody.getOrientation(rotation);
             position = this.transform.origin;
-            //System.out.println("Block position is " + position.x + " " + position.y + " " + position.z);
-            //System.out.println("Block orientation is " + rotation.x + " " + rotation.y + " " + rotation.z + " " + rotation.w);
             this.rigidBody.getAngularVelocity(vel);
 
             //this.setVelocity(vel.x, vel.y, vel.z);
 
-            //System.out.println("tick");
             this.setPhysicsBlockRot(rotation);
             position.add(new Vector3f(BLOCK_OFFSET.x,BLOCK_OFFSET.y,BLOCK_OFFSET.z));
-            //if(shouldUpdatePosition(VecUtils.toVec3d(position))) {
             this.setPositionInternal(position.x, position.y, position.z);
-            //}
-            //this.setCustomName(Text.literal("X" + position.x + " Y" + position.y + " Z" + position.z));
         } else {
             //this.move(MovementType.SELF, this.getVelocity());
             this.onGround = false;
@@ -228,7 +208,6 @@ public class PhysicsBlockEntity extends Entity {
         final float interp = 0.15f;
         Vector3f newPos = VecUtils.toVector3f(new Vec3d(this.getPos().x, this.getBoundingBox().maxY - 1d, this.getPos().z));
         if(!isWithinDistance(this.renderPosition, newPos, 50)) {
-            //System.out.println("Changing renderPosition...");
             this.renderPosition = newPos;
         }
         this.renderPosition.interpolate(newPos, interp);
@@ -249,9 +228,6 @@ public class PhysicsBlockEntity extends Entity {
             if (rigidBody != null) {
                 this.rigidBody.setWorldTransform(transform);
             }
-        }
-        else if(world.isClient() && this.getPos() != null && this.renderPosition != null) {
-
         }
     }
 
@@ -295,6 +271,5 @@ public class PhysicsBlockEntity extends Entity {
         double f = packet.getZ();
         this.setPosition(d, e, f);
         this.setPhysicsBlockPos(this.getBlockPos());
-        //this.setPhysicsBlockRot(this.physicsRotation);
     }
 }
