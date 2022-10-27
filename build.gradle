@@ -1,7 +1,11 @@
 plugins {
     id 'fabric-loom' version '1.0-SNAPSHOT'
     id 'maven-publish'
+    id 'com.github.johnrengelman.shadow' version '7.1.2'
 }
+
+apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'java'
 
 version = project.mod_version
 group = project.maven_group
@@ -17,6 +21,10 @@ repositories {
     }
 }
 
+tasks.withType(JavaCompile) {
+    options.encoding = "UTF-8"
+}
+
 dependencies {
     // To change the versions see the gradle.properties file
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
@@ -26,9 +34,22 @@ dependencies {
     // Fabric API. This is technically optional, but you probably want it anyway.
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-    modImplementation name: "tera-bullet-1.3.3-SNAPSHOT"
-    modImplementation "javax.vecmath:vecmath:1.5.2"
-    include name: "tera-bullet-1.3.3-SNAPSHOT"
+
+    shadow(implementation "javax.vecmath:vecmath:1.5.2")
+    shadow(implementation name: "tera-bullet-1.3.3-SNAPSHOT")
+    //include name: "tera-bullet-1.3.3-SNAPSHOT"
+}
+
+shadowJar {
+    configurations = [project.configurations.shadow]
+    relocate "com.bulletphysics", "me.arzyk.physics.shadow.com.bulletphysics"
+    relocate "javax.vecmath", "me.arzyk.physics.shadow.javax.vecmath"
+    archiveClassifier.set("dev")
+}
+
+remapJar {
+    dependsOn(shadowJar)
+    inputFile = tasks.shadowJar.archiveFile
 }
 
 processResources {
@@ -66,6 +87,7 @@ java {
 
 jar {
     from("LICENSE") {
+        archiveClassifier.set("dev")
         rename { "${it}_${project.archivesBaseName}" }
     }
 }
