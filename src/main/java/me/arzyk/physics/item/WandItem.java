@@ -14,7 +14,7 @@ import java.util.List;
 
 public class WandItem extends Item {
 
-    static final int MAX_BLOCK_COUNT = 50;
+    static final int MAX_BLOCK_COUNT = 100;
 
     public WandItem(Settings settings) {
         super(settings);

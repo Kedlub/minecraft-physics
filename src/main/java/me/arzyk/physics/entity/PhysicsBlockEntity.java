@@ -21,8 +21,10 @@ import net.minecraft.nbt.NbtHelper;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.network.Packet;
 import net.minecraft.network.packet.s2c.play.EntitySpawnS2CPacket;
+import net.minecraft.predicate.entity.EntityPredicates;
 import net.minecraft.state.property.Properties;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
@@ -30,6 +32,7 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.vecmath.Quat4f;
 import javax.vecmath.Vector3f;
+import java.util.List;
 
 public class PhysicsBlockEntity extends Entity {
 
@@ -168,7 +171,8 @@ public class PhysicsBlockEntity extends Entity {
             position = this.transform.origin;
             this.rigidBody.getAngularVelocity(vel);
 
-            //this.setVelocity(vel.x, vel.y, vel.z);
+
+            this.setVelocity(vel.x, vel.y, vel.z);
 
             this.setPhysicsBlockRot(rotation);
             position.add(new Vector3f(BLOCK_OFFSET.x,BLOCK_OFFSET.y,BLOCK_OFFSET.z));
@@ -192,6 +196,18 @@ public class PhysicsBlockEntity extends Entity {
         this.prevX = this.getPos().x;
         this.prevY = this.getPos().y;
         this.prevZ = this.getPos().z;
+
+        this.checkBlockCollision();
+        List<Entity> list = this.world.getOtherEntities(this, this.getCollisionBoundingBox(), EntityPredicates.canBePushedBy(this));
+        if (!list.isEmpty()) {
+            for (Entity entity : list) {
+                this.pushAwayFrom(entity);
+            }
+        }
+    }
+
+    public Box getCollisionBoundingBox() {
+        return super.getBoundingBox().offset(0.5f, 0.0f, 0.5f);
     }
 
     boolean shouldUpdatePosition(Vec3d newPos) {

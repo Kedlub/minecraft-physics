@@ -40,14 +40,14 @@ public class WorldEventHandler {
     public static void onWorldUnload(MinecraftServer server, ServerWorld world) {
         String dimensionID = world.getDimensionKey().getValue().toString();
         System.out.println("Removing dynamicsWorld for dimension " + dimensionID);
-        Physics.dynamicWorlds.get(dimensionID).destroy();
+        Physics.dynamicWorlds.get(dimensionID).dispose();
         Physics.dynamicWorlds.remove(dimensionID);
     }
 
     public static void onWorldTick(ServerWorld world) {
         String dimensionID = world.getDimensionKey().getValue().toString();
         MinecraftPhysicsWorld physicsWorld = Physics.dynamicWorlds.get(dimensionID);
-        physicsWorld.update();
+        //physicsWorld.update();
     }
 
     static final Box AWAKE_BOX = new Box(-5,-5,-5,5,5,5);

@@ -17,10 +17,12 @@ import com.bulletphysics.linearmath.Transform;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
+import net.minecraft.util.math.ChunkSectionPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 
 import javax.vecmath.Vector3f;
+import java.util.ArrayList;
 import java.util.List;
 
 public class MinecraftPhysicsWorld extends DiscreteDynamicsWorld {
@@ -32,6 +34,8 @@ public class MinecraftPhysicsWorld extends DiscreteDynamicsWorld {
     VoxelWorldShape worldShape;
     RigidBody worldBody;
     World world;
+    Thread updateThread;
+    List<PhysicsChunk> chunks = new ArrayList<>();
 
     public MinecraftPhysicsWorld(World world, Dispatcher dispatcher, BroadphaseInterface broadphaseInterface, ConstraintSolver constraintSolver, CollisionConfiguration collisionConfiguration) {
         super(dispatcher,broadphaseInterface,constraintSolver,collisionConfiguration);
@@ -56,6 +60,47 @@ public class MinecraftPhysicsWorld extends DiscreteDynamicsWorld {
         this.worldBody.setCollisionFlags(CollisionFlags.STATIC_OBJECT | this.worldBody.getCollisionFlags());
         this.addRigidBody(worldBody);
         this.updateSingleAabb(worldBody);
+
+        updateThread = new Thread(() -> {
+            while(!Thread.currentThread().isInterrupted()) {
+                try {
+                    synchronized (this) {
+                        stepSimulation(1F, getMaxSubstep());
+                    }
+                    Thread.sleep(50);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        });
+        updateThread.start();
+
+        /*ChunkUpdateCallback.EVENT.register((chunk -> {
+            if(chunk.getWorld().isClient) return ActionResult.PASS;
+            updateChunkCache(chunk.getPos().x, chunk.getPos().z);
+            return ActionResult.PASS;
+        }));*/
+    }
+
+    public void dispose() {
+        updateThread.interrupt();
+        destroy();
+    }
+
+    public void updateChunkCache(int i, int j) {
+        var chunk = this.world.getChunk(i,j);
+        var filteredChunks = chunks.stream().filter(c -> c.x == i && c.z == j).toList();
+        var physChunk = filteredChunks.size() > 0 ? filteredChunks.get(0) : new PhysicsChunk(i,j);
+        for (int x = 0; x < 15; x++) {
+            for (int z = 0; z < 15; z++) {
+                for(int y = chunk.getBottomY(); y < chunk.getTopY(); y++) {
+                    physChunk.solidBlocks.put(new BlockPos(x,y,z),chunk.getBlockState(new BlockPos(x,y,z)).isSolidBlock(world, new BlockPos(x,y,z)));
+                }
+            }
+        }
+        if(!chunks.contains(physChunk)) {
+            chunks.add(physChunk);
+        }
     }
 
     private VoxelInfo generateVoxelInfo(int x,int y, int z) {
@@ -68,7 +113,7 @@ public class MinecraftPhysicsWorld extends DiscreteDynamicsWorld {
         return new VoxelInfo() {
             @Override
             public boolean isColliding() {
-                return block.isFullCube(world, new BlockPos(x,y,z));
+                return false;
             }
 
             @Override
@@ -88,7 +133,11 @@ public class MinecraftPhysicsWorld extends DiscreteDynamicsWorld {
 
             @Override
             public boolean isBlocking() {
-                return block.isFullCube(world, new BlockPos(x,y,z));
+                if(chunks.isEmpty()) {
+                    return true;
+                }
+                var physChunk = chunks.stream().filter(c -> c.x == ChunkSectionPos.getSectionCoord(x) && c.z == ChunkSectionPos.getSectionCoord(z)).toList().get(0);
+                return physChunk.solidBlocks.get(new BlockPos(x,y,z));
             }
 
             @Override
@@ -104,21 +153,11 @@ public class MinecraftPhysicsWorld extends DiscreteDynamicsWorld {
     }
 
     public void update() {
-        this.stepSimulation(1F, getMaxSubstep());
+        stepSimulation(1F, getMaxSubstep());
+
     }
 
-    /**
-     * time at last frame
-     */
     long lastFrame;
-    /**
-     * frames per second
-     */
-    int tps;
-    /**
-     * last fps time
-     */
-    long lastFPS;
 
     /**
      * Calculate how many milliseconds have passed
@@ -141,7 +180,6 @@ public class MinecraftPhysicsWorld extends DiscreteDynamicsWorld {
      */
     public long getTime() {
         return System.currentTimeMillis();
-//        return (Sys.getTime() * 1000) / Sys.getTimerResolution();
     }
 
     protected float lastDelta;
