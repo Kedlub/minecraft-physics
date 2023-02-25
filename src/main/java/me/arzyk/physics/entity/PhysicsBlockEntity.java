@@ -1,12 +1,10 @@
 package me.arzyk.physics.entity;
 
-import com.bulletphysics.collision.shapes.BoxShape;
-import com.bulletphysics.dynamics.RigidBody;
-import com.bulletphysics.linearmath.DefaultMotionState;
-import com.bulletphysics.linearmath.Transform;
 import me.arzyk.physics.Physics;
 import me.arzyk.physics.network.DataSerializers;
 import me.arzyk.physics.util.VecUtils;
+import me.arzyk.physics.world.RigidBody;
+import me.arzyk.physics.world.shapes.BoxShape;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -45,7 +43,6 @@ public class PhysicsBlockEntity extends Entity {
     public boolean shouldSolidify = false;
     public int solidifyTick = 40;
     public RigidBody rigidBody;
-    public Transform transform = new Transform();
     public Quat4f physicsRotation = new Quat4f();
     protected static final TrackedData<BlockPos> BLOCK_POS = DataTracker.registerData(PhysicsBlockEntity.class, TrackedDataHandlerRegistry.BLOCK_POS);
     protected static final TrackedData<Quat4f> ROTATION = DataTracker.registerData(PhysicsBlockEntity.class, DataSerializers.QUAT4F);
@@ -58,25 +55,18 @@ public class PhysicsBlockEntity extends Entity {
         this.intersectionChecked = true;
 
         if (!world.isClient()) {
-            BoxShape localBoxShape = BLOCK_SHAPE;
-            Vector3f inertia = new Vector3f();
-            localBoxShape.calculateLocalInertia(20, inertia);
-
-            var pos = this.getPos();
-            transform.setIdentity();
-            transform.origin.set((float) pos.getX() - BLOCK_OFFSET.x, (float) pos.getY() - BLOCK_OFFSET.y, (float) pos.getZ() - BLOCK_OFFSET.z);
-            transform.getRotation(this.physicsRotation);
-            //System.out.println("constructor");
+            var dimension = world.getDimensionKey().getValue().toString();
+            this.rigidBody = Physics.instance.dynamicWorlds.get(dimension).createRigidBody(BLOCK_SHAPE);
+            this.rigidBody.setMass(20);
+            this.rigidBody.setPosition(VecUtils.toVector3f(this.getPos()));
             setPhysicsBlockRot(this.physicsRotation);
 
-            this.rigidBody = new RigidBody(20, new DefaultMotionState(transform), localBoxShape, inertia);
             this.rigidBody.setRestitution(0.01F);
             this.rigidBody.setFriction(0.8F);
             this.rigidBody.setDamping(0.2F, 0.4F);
 
-            var dimension = world.getDimensionKey().getValue().toString();
             //System.out.println("Spawning block rigidBody in " + dimension);
-            Physics.dynamicWorlds.get(dimension).addRigidBody(rigidBody);
+            Physics.instance.dynamicWorlds.get(dimension).addRigidBody(rigidBody);
             rigidBody.activate();
         }
     }
@@ -129,8 +119,7 @@ public class PhysicsBlockEntity extends Entity {
         if (!Float.isNaN(quat4f.x)) {
             //System.out.println("readCustomDataFromNbt");
             setPhysicsBlockRot(quat4f);
-            this.transform.setRotation(this.physicsRotation);
-            this.rigidBody.setWorldTransform(this.transform);
+            this.rigidBody.setRotation(quat4f);
         }
 
         if (this.block.isAir()) {
@@ -154,7 +143,7 @@ public class PhysicsBlockEntity extends Entity {
         if (!world.isClient) {
             String dimensionID = this.world.getDimensionKey().getValue().toString();
             //System.out.println("Removing rigidBody from dimension " + dimensionID);
-            Physics.getPhysicsWorld(dimensionID).removeRigidBody(this.rigidBody);
+            Physics.instance.getPhysicsWorld(dimensionID).removeRigidBody(this.rigidBody);
         }
     }
 
@@ -165,14 +154,8 @@ public class PhysicsBlockEntity extends Entity {
         } else if (!world.isClient()) {
             Vector3f position;
             Quat4f rotation = new Quat4f();
-            Vector3f vel = new Vector3f();
-            this.rigidBody.getWorldTransform(this.transform);
-            this.rigidBody.getOrientation(rotation);
-            position = this.transform.origin;
-            this.rigidBody.getAngularVelocity(vel);
-
-
-            this.setVelocity(vel.x, vel.y, vel.z);
+            position = this.rigidBody.getPosition();
+            rotation = this.rigidBody.getRotation();
 
             this.setPhysicsBlockRot(rotation);
             position.add(new Vector3f(BLOCK_OFFSET.x,BLOCK_OFFSET.y,BLOCK_OFFSET.z));
@@ -260,13 +243,9 @@ public class PhysicsBlockEntity extends Entity {
     public void setPosition(double x, double y, double z) {
         super.setPosition(x, y, z);
 
-        if (!world.isClient() && this.transform != null) {
-            rigidBody.getWorldTransform(this.transform);
+        if (!world.isClient() && this.rigidBody != null) {
+            rigidBody.setPosition(VecUtils.toVector3f(new Vec3d(x, y, z)));
             //System.out.println("Setting physBlock position to " + x + " " + y + " " + z);
-            transform.origin.set((float) x - BLOCK_OFFSET.x, (float) y - BLOCK_OFFSET.y, (float) z - BLOCK_OFFSET.z);
-            if (rigidBody != null) {
-                this.rigidBody.setWorldTransform(transform);
-            }
         }
     }
 

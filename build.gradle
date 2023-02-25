@@ -34,9 +34,14 @@ dependencies {
     // Fabric API. This is technically optional, but you probably want it anyway.
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-
+    // I have no idea what I'm doing, but it works
     shadow(implementation "javax.vecmath:vecmath:1.5.2")
     shadow(implementation name: "tera-bullet-1.3.3-SNAPSHOT")
+
+    shadow(implementation("de.fabmax:physx-jni:1.1.0"))
+    shadow(runtimeOnly("de.fabmax:physx-jni:1.1.0:natives-windows"))
+    shadow(runtimeOnly("de.fabmax:physx-jni:1.1.0:natives-linux"))
+    shadow(runtimeOnly("de.fabmax:physx-jni:1.1.0:natives-macos"))
     //include name: "tera-bullet-1.3.3-SNAPSHOT"
 }
 
@@ -44,6 +49,11 @@ shadowJar {
     configurations = [project.configurations.shadow]
     relocate "com.bulletphysics", "me.arzyk.physics.shadow.com.bulletphysics"
     relocate "javax.vecmath", "me.arzyk.physics.shadow.javax.vecmath"
+    relocate "de.fabmax", "me.arzyk.physics.shadow.de.fabmax"
+    relocate "windows", "me.arzyk.physics.natives.windows"
+    relocate "linux", "me.arzyk.physics.natives.linux"
+    relocate "macos", "me.arzyk.physics.natives.macos"
+    relocate "physx", "me.arzyk.physics.shadow.physx"
     archiveClassifier.set("dev")
 }
 

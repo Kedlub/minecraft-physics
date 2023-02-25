@@ -19,8 +19,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.world.World;
 
-import javax.vecmath.Vector3f;
-
 public class WorldEventHandler {
 
     public static void onWorldLoad(MinecraftServer server,
@@ -33,30 +31,31 @@ public class WorldEventHandler {
         CollisionConfiguration collisionConfiguration = new DefaultCollisionConfiguration();
         Dispatcher dispatcher = new CollisionDispatcher(collisionConfiguration);
 
-        MinecraftPhysicsWorld physicsWorld = new MinecraftPhysicsWorld(world, dispatcher, broadphaseInterface, constraintSolver, collisionConfiguration);
-        Physics.dynamicWorlds.put(dimensionID, physicsWorld);
+        MinecraftPhysicsWorld physicsWorld = MinecraftPhysicsWorld.create(world);
+        Physics.instance.dynamicWorlds.put(dimensionID, physicsWorld);
     }
 
     public static void onWorldUnload(MinecraftServer server, ServerWorld world) {
         String dimensionID = world.getDimensionKey().getValue().toString();
         System.out.println("Removing dynamicsWorld for dimension " + dimensionID);
-        Physics.dynamicWorlds.get(dimensionID).dispose();
-        Physics.dynamicWorlds.remove(dimensionID);
+        Physics.instance.dynamicWorlds.get(dimensionID).destroy();
+        Physics.instance.dynamicWorlds.remove(dimensionID);
     }
 
     public static void onWorldTick(ServerWorld world) {
         String dimensionID = world.getDimensionKey().getValue().toString();
-        MinecraftPhysicsWorld physicsWorld = Physics.dynamicWorlds.get(dimensionID);
-        //physicsWorld.update();
+        MinecraftPhysicsWorld physicsWorld = Physics.instance.dynamicWorlds.get(dimensionID);
+        physicsWorld.tick();
     }
 
     static final Box AWAKE_BOX = new Box(-5,-5,-5,5,5,5);
     public static void afterBlockBreak(World world, PlayerEntity player, BlockPos pos, BlockState state, BlockEntity blockEntity) {
         if(!world.isClient()) {
             String dimensionID = world.getDimensionKey().getValue().toString();
-            MinecraftPhysicsWorld physicsWorld = Physics.dynamicWorlds.get(dimensionID);
+            MinecraftPhysicsWorld physicsWorld = Physics.instance.dynamicWorlds.get(dimensionID);
             Box box = AWAKE_BOX.offset(pos);
-            physicsWorld.awakenRigidBodiesInArea(new Vector3f((float) box.minX, (float) box.minY, (float) box.minZ), new Vector3f((float) box.maxX, (float) box.maxY, (float) box.maxZ));
+            physicsWorld.awakenRigidBodiesInBox((float) box.minX, (float) box.minY, (float) box.minZ, (float) box.maxX, (float) box.maxY, (float) box.maxZ);
+            //physicsWorld.awakenRigidBodiesInArea(new Vector3f((float) box.minX, (float) box.minY, (float) box.minZ), new Vector3f((float) box.maxX, (float) box.maxY, (float) box.maxZ));
         }
     }
 }

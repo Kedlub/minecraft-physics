@@ -1,6 +1,5 @@
 package me.arzyk.physics.mixin;
 
-import me.arzyk.physics.Physics;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -19,9 +18,9 @@ public class ChunkUpdateMixin {
     @Inject(method = "setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;Z)Lnet/minecraft/block/BlockState;", at = @At(value = "TAIL"))
     private void onUpdate(BlockPos pos, BlockState state, boolean moved, CallbackInfoReturnable<BlockState> cir) {
         if(!world.isClient()) {
-            WorldChunk chunk = (WorldChunk) (Object) this;
-            var physWorld = Physics.dynamicWorlds.get(world.getDimensionKey().getValue().toString());
-            physWorld.updateChunkCache(chunk.getPos().x, chunk.getPos().z);
+            /*WorldChunk chunk = (WorldChunk) (Object) this;
+            var physWorld = Physics.instance.dynamicWorlds.get(world.getDimensionKey().getValue().toString());
+            physWorld.updateChunkCache(chunk.getPos().x, chunk.getPos().z);*/
         }
     }
 }
