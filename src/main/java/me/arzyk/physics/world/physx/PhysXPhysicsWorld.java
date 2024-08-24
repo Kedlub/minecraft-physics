@@ -4,6 +4,7 @@ import me.arzyk.physics.world.MinecraftPhysicsWorld;
 import me.arzyk.physics.world.RigidBody;
 import me.arzyk.physics.world.shapes.Shape;
 import net.minecraft.world.World;
+import net.minecraft.world.chunk.Chunk;
 
 public class PhysXPhysicsWorld extends MinecraftPhysicsWorld {
 
@@ -13,7 +14,25 @@ public class PhysXPhysicsWorld extends MinecraftPhysicsWorld {
 
     @Override
     public void updateChunkCache(int x, int z) {
+        Chunk chunk = world.getChunk(x, z);
+        PhysXPhysicsChunk physicsChunk = new PhysXPhysicsChunk();
+        int startY = 0;
+        int endY = 256;
 
+        for (int xi = 0; xi < 16; xi++) {
+            for (int zi = 0; zi < 16; zi++) {
+                for (int yi = startY; yi < endY; yi++) {
+                    BlockPos pos = new BlockPos(xi + (x << 4), yi, zi + (z << 4));
+                    BlockState state = chunk.getBlockState(pos);
+                    Block block = state.getBlock();
+                    if (block.getMaterial(state).isSolid() && !block.hasTileEntity(state)) {
+                        physicsChunk.setSolid(xi, yi, zi, true);
+                    }
+                }
+            }
+        }
+
+        chunkCache.put(new BlockPos(x, z), physicsChunk);
     }
 
     @Override
